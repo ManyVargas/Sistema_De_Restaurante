@@ -19,7 +19,7 @@ do
     Console.WriteLine("BIENVENIDO!");
 
     fntMostrarOpciones();
-    userChoise = Console.ReadLine();
+    userChoise = Console.ReadLine()!;
 
     switch (userChoise)
     {
@@ -72,7 +72,6 @@ void fntMostrarOpciones()
 //Mostrar las mesas del restaurante desde la base de datos
 void fntVerMesas()
 {
-    Console.Clear();
     Console.WriteLine("Catalogo de mesas.");
     using (SqlConnection connection = new SqlConnection(connectionString))
     {
@@ -117,16 +116,15 @@ void fntVerMesas()
     }
 }
 
-//HEAD
+
 //Cancelar una reserva
 void fntCancelarReserva()
 {
-    Console.Clear();
     Console.WriteLine("Cancelar Reserva");
     Console.WriteLine("Para mas seguridad ingrese los siguientes datos:\n");
 
     Console.Write("A nombre de quien esta la reserva: ");
-    string nombreDe = Console.ReadLine();
+    string nombreDe = Console.ReadLine()!;
 
     Console.Write("Id de reserva: ");
     int idReserva = Convert.ToInt32(Console.ReadLine());
@@ -135,7 +133,7 @@ void fntCancelarReserva()
     int numeroMesa = Convert.ToInt32(Console.ReadLine());
 
     Console.Write("Ingrese a que hora es su reserva en formato (HH:mm): ");
-    string horaReservaString = Console.ReadLine();
+    string horaReservaString = Console.ReadLine()!;
     TimeSpan horaReserva = TimeSpan.Parse(horaReservaString);
 
 
@@ -201,11 +199,10 @@ void fntCancelarReserva()
 //Realizar una Reserva
 void fntRealizarReserva()
 {
-    Console.Clear();
     Console.WriteLine("Realizar reserva");
 
     Console.Write("A nombre de quien será la reserva: ");
-    string reservaPara = Console.ReadLine();
+    string reservaPara = Console.ReadLine()!;
 
     Console.WriteLine("\nCual mesa le interesaria reservar?");
     fntVerMesas();
@@ -284,6 +281,7 @@ void fntRealizarReserva()
 
 }
 
+//Hacer consulta de una reserva
 void fntConsultarReserva()
 {
 
@@ -292,9 +290,8 @@ void fntConsultarReserva()
 
 
     int reserva;
-
-    Console.WriteLine("\nHola!");
-    Console.Write("\nIngrese el ID asignado a su mesa: ");
+    Console.WriteLine("\nConsultar reserva");
+    Console.Write("\nIngrese el ID asignado a su reserva: ");
     reserva = Convert.ToInt32(Console.ReadLine());
 
     string query = "select * from tabla_reservas where id_reserva = " + reserva;
@@ -307,9 +304,10 @@ void fntConsultarReserva()
     if (registro.Read())
     {
         reserva = Convert.ToInt32(registro["id_reserva"]);
-        int IDMesa = Convert.ToInt32(registro["id_mesa"]);
-        string Nombre = registro["reserva_para"].ToString();
+        int Mesa = Convert.ToInt32(registro["numero_mesa"]);
+        string Nombre = registro["reserva_para"].ToString()!;
         TimeSpan Hora = registro.GetTimeSpan(registro.GetOrdinal("hora_reserva"));
+        Console.WriteLine($"Id de la reserva: {reserva}\nTitular: {Nombre}\nHora: {Hora}\nNumero de mesa: {Mesa}");
     }
     else
     {
@@ -349,4 +347,5 @@ void fntVolverMenuTexto()
     Console.WriteLine("\nPresione cualquier tecla para volver al menú principal.");
     Console.ResetColor();
     Console.ReadKey();
+    Console.Clear();
 }
