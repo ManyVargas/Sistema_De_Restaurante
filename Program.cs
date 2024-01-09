@@ -258,7 +258,7 @@ void fntRealizarReserva()
             using (SqlCommand command4 = new SqlCommand(query4, connection, transaction))
             {
                 command4.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                command4.Parameters.AddWithValue("@reserva_para",reservaPara);
+                command4.Parameters.AddWithValue("@reserva_para", reservaPara);
                 command4.ExecuteNonQuery();
                 using (SqlDataReader reader = command4.ExecuteReader())
                 {
