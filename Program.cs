@@ -137,7 +137,7 @@ void fntConsultarReserva()
     }
     else
     {
-        Console.WriteLine("No existe reserva con ese ID");
+        Console.WriteLine("\nNo existe reserva con ese ID");
     }
 
 }
