@@ -30,7 +30,7 @@ do
             //fntCancelarReserva();
             break;
         case "4":
-            //fntConsultarReserva();
+            fntConsultarReserva();
             break;
         case "5":
             fntCerrarPrograma();
@@ -108,7 +108,39 @@ void fntVerMesas()
     }
 }
 
+void fntConsultarReserva()
+{
 
+    SqlConnection connection = new SqlConnection(connectionString);
+    connection.Open();
+
+
+    int reserva;
+
+    Console.WriteLine("\nHola!");
+    Console.Write("\nIngrese el ID asignado a su mesa: ");
+    reserva = Convert.ToInt32(Console.ReadLine());
+
+    string query = "select * from tabla_reservas where id_reserva = " + reserva;
+
+    SqlCommand command = new SqlCommand(query, connection);
+
+    command.ExecuteNonQuery();
+
+    SqlDataReader registro = command.ExecuteReader();
+    if (registro.Read())
+    {
+        reserva = Convert.ToInt32(registro["id_reserva"]);
+        int IDMesa = Convert.ToInt32(registro["id_mesa"]);
+        string Nombre = registro["reserva_para"].ToString();
+        TimeSpan Hora = registro.GetTimeSpan(registro.GetOrdinal("hora_reserva"));
+    }
+    else
+    {
+        Console.WriteLine("No existe reserva con ese ID");
+    }
+
+}
 
 //Cerrar programa
 void fntCerrarPrograma()
