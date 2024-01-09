@@ -1,5 +1,4 @@
-﻿//Debe tener las referencias de System.Data.SqlClient instalada
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 //Conexión con base de datos SQL
@@ -11,13 +10,11 @@ string userChoise;
 int vColumnaAncho = 20;
 
 
+Console.WriteLine("BIENVENIDO!");
 
 //Mantener programa en ejecución
 do
 {
-    Console.Clear();
-    Console.WriteLine("BIENVENIDO!");
-
     fntMostrarOpciones();
     userChoise = Console.ReadLine();
 
@@ -25,18 +22,15 @@ do
     {
         case "1":
             fntVerMesas();
-            fntVolverMenuTexto();
             break;
         case "2":
-            fntRealizarReserva();
-            fntVolverMenuTexto();
+            //fntRealizarReserva();
             break;
         case "3":
-            fntCancelarReserva();
-            fntVolverMenuTexto();
+            //fntCancelarReserva();
             break;
         case "4":
-            //fntVerInformacionReserva();
+            fntVerInformacionReserva();
             fntVolverMenuTexto();
             break;
         case "5":
@@ -64,7 +58,7 @@ void fntMostrarOpciones()
     Console.WriteLine("[1] Ver disponibilidad de mesas.");
     Console.WriteLine("[2] Realizar una reserva.");
     Console.WriteLine("[3] Cancelar una reserva.");
-    Console.WriteLine("[4] Ver información de reserva.");
+    Console.WriteLine("[4] Consultar reserva.");
     Console.WriteLine("[5] Salir del programa.");
     Console.Write("Elija una opción: ");
 }
@@ -72,8 +66,6 @@ void fntMostrarOpciones()
 //Mostrar las mesas del restaurante desde la base de datos
 void fntVerMesas()
 {
-    Console.Clear();
-    Console.WriteLine("Catalogo de mesas.");
     using (SqlConnection connection = new SqlConnection(connectionString))
     {
         connection.Open();
@@ -113,86 +105,6 @@ void fntVerMesas()
             }
             catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         }
-        connection.Close();
-    }
-}
-
-//Cancelar una reserva
-void fntCancelarReserva()
-{
-    Console.Clear();
-    Console.WriteLine("Cancelar Reserva");
-    Console.WriteLine("Para mas seguridad ingrese los siguientes datos:\n");
-
-    Console.Write("A nombre de quien esta la reserva: ");
-    string nombreDe = Console.ReadLine();
-
-    Console.Write("Id de reserva: ");
-    int idReserva = Convert.ToInt32(Console.ReadLine());
-
-    Console.Write("Ingrese el numero de mesa de su reserva: ");
-    int numeroMesa = Convert.ToInt32(Console.ReadLine());
-
-    Console.Write("Ingrese a que hora es su reserva en formato (HH:mm): ");
-    string horaReservaString = Console.ReadLine();
-    TimeSpan horaReserva = TimeSpan.Parse(horaReservaString);
-
-
-    using (SqlConnection connection = new SqlConnection(connectionString))
-    {
-        connection.Open();
-        SqlTransaction transaction = connection.BeginTransaction();
-
-        try
-        {
-            string query = "delete from tabla_reservas where hora_reserva = @hora_reserva and id_reserva = @id_reserva and reserva_para = @reserva_para";
-            using (SqlCommand command = new SqlCommand(query, connection, transaction))
-            {
-                command.Parameters.AddWithValue("@hora_reserva", horaReserva);
-                command.Parameters.AddWithValue("@id_reserva", idReserva);
-                command.Parameters.AddWithValue("@reserva_para", nombreDe);
-                int rowsAffected = command.ExecuteNonQuery();
-
-                if (rowsAffected > 0)
-                {
-                    Console.WriteLine("Operacion realizada correctamente.");
-                }
-                else
-                {
-                    Console.WriteLine("No se encontro ningun registro con esos datos.");
-                }
-            }
-
-            string query2 = "update tabla_mesas_disponibles set estado_mesa = 1 where horas_disponibles = @hora_reserva and numero_mesa = @numero_mesa and reserva_de = @reserva_para";
-            using (SqlCommand command2 = new SqlCommand(query2, connection, transaction))
-            {
-
-
-                command2.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                command2.Parameters.AddWithValue("@hora_reserva", horaReserva);
-                command2.Parameters.AddWithValue("@reserva_para", nombreDe);
-                int rowsAffected = command2.ExecuteNonQuery();
-            }
-
-            string query3 = "update tabla_mesas_disponibles set reserva_de = default where numero_mesa = @numero_mesa";
-            using (SqlCommand command3 = new SqlCommand(query3, connection, transaction))
-            {
-                command3.Parameters.AddWithValue("@reserva_para", nombreDe);
-                command3.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                command3.ExecuteNonQuery();
-            }
-
-            transaction.Commit();
-        }
-        catch (Exception ex)
-        {
-            transaction.Rollback();
-
-            Console.WriteLine("No se pudo realizar la operación.");
-            Console.WriteLine("Error: " + ex.ToString());
-        }
-
-
         connection.Close();
     }
 }
@@ -258,7 +170,7 @@ void fntRealizarReserva()
             using (SqlCommand command4 = new SqlCommand(query4, connection, transaction))
             {
                 command4.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                command4.Parameters.AddWithValue("@reserva_para", reservaPara);
+                command4.Parameters.AddWithValue("@reserva_para",reservaPara);
                 command4.ExecuteNonQuery();
                 using (SqlDataReader reader = command4.ExecuteReader())
                 {
@@ -281,7 +193,6 @@ void fntRealizarReserva()
         connection.Close();
     }
 
-}
 
 
 //Cerrar programa
@@ -306,12 +217,4 @@ void prdLineasHorizontales(int longitud)
 void Fila(int columna1, int columna2, TimeSpan columna3, string columna4)
 {
     Console.WriteLine($"|{prdFormatoColumna(columna1.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna2.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna3.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna4, vColumnaAncho)}");
-}
-
-void fntVolverMenuTexto()
-{
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine("\nPresione cualquier tecla para volver al menú principal.");
-    Console.ResetColor();
-    Console.ReadKey();
 }
