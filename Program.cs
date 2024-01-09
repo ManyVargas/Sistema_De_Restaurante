@@ -36,7 +36,7 @@ do
             fntVolverMenuTexto();
             break;
         case "4":
-            fntVerInformacionReserva();
+            //fntVerInformacionReserva();
             fntVolverMenuTexto();
             break;
         case "5":
