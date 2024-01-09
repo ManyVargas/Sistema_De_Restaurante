@@ -1,5 +1,6 @@
 ﻿//Debe tener las referencias de System.Data.SqlClient instalada
 using System.Data.SqlClient;
+using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 //Conexión con base de datos SQL
@@ -24,18 +25,22 @@ do
     switch (userChoise)
     {
         case "1":
+            Console.Clear();
             fntVerMesas();
             fntVolverMenuTexto();
             break;
         case "2":
+            Console.Clear();
             fntRealizarReserva();
             fntVolverMenuTexto();
             break;
         case "3":
+            Console.Clear();
             fntCancelarReserva();
             fntVolverMenuTexto();
             break;
         case "4":
+            Console.Clear();
             fntConsultarReserva();
             fntVolverMenuTexto();
             break;
@@ -43,7 +48,7 @@ do
             fntCerrarPrograma();
             break;
         default:
-            Console.WriteLine("Selección inválida.");
+            Console.WriteLine("\nSelección inválida!.");
             break;
     }
 
@@ -53,26 +58,25 @@ do
 
 Console.ReadKey();
 
-
-
 /*---------------METODOS-------------*/
 
 //Mostrar opciones del menu
 void fntMostrarOpciones()
 {
-    Console.Write("\n");
-    Console.WriteLine("[1] Ver disponibilidad de mesas.");
-    Console.WriteLine("[2] Realizar una reserva.");
-    Console.WriteLine("[3] Cancelar una reserva.");
-    Console.WriteLine("[4] Ver información de reserva.");
-    Console.WriteLine("[5] Salir del programa.");
-    Console.Write("Elija una opción: ");
+    
+    
+    Console.WriteLine("\n[1] Ver disponibilidad de mesas.");
+    Console.WriteLine("\n[2] Realizar una reserva.");
+    Console.WriteLine("\n[3] Cancelar una reserva.");
+    Console.WriteLine("\n[4] Ver información de reserva.");
+    Console.WriteLine("\n[5] Salir del programa.");
+    Console.Write("\nElija una opción: ");
 }
 
 //Mostrar las mesas del restaurante desde la base de datos
 void fntVerMesas()
 {
-    Console.WriteLine("Catalogo de mesas.");
+    Console.WriteLine("CATALOGO DE MESAS.");
     using (SqlConnection connection = new SqlConnection(connectionString))
     {
         connection.Open();
@@ -106,7 +110,9 @@ void fntVerMesas()
                     }
                     else
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("No hay registros disponibles.");
+                        Console.ResetColor();
                     }
                 }
             }
@@ -120,19 +126,19 @@ void fntVerMesas()
 //Cancelar una reserva
 void fntCancelarReserva()
 {
-    Console.WriteLine("Cancelar Reserva");
-    Console.WriteLine("Para mas seguridad ingrese los siguientes datos:\n");
+    Console.WriteLine("\nCANCELAR RESERVA");
+    Console.WriteLine("\nPara mas seguridad ingrese los siguientes datos:\n");
 
-    Console.Write("A nombre de quien esta la reserva: ");
+    Console.Write("\nA nombre de quien esta la reserva: ");
     string nombreDe = Console.ReadLine()!;
 
-    Console.Write("Id de reserva: ");
+    Console.Write("\nId de reserva: ");
     int idReserva = Convert.ToInt32(Console.ReadLine());
 
-    Console.Write("Ingrese el numero de mesa de su reserva: ");
+    Console.Write("\nIngrese el numero de mesa de su reserva: ");
     int numeroMesa = Convert.ToInt32(Console.ReadLine());
 
-    Console.Write("Ingrese a que hora es su reserva en formato (HH:mm): ");
+    Console.Write("\nIngrese a que hora es su reserva en formato (HH:mm): ");
     string horaReservaString = Console.ReadLine()!;
     TimeSpan horaReserva = TimeSpan.Parse(horaReservaString);
 
@@ -154,11 +160,13 @@ void fntCancelarReserva()
 
                 if (rowsAffected > 0)
                 {
-                    Console.WriteLine("Operacion realizada correctamente.");
+                    Console.WriteLine("\nOperacion realizada correctamente.");
                 }
                 else
                 {
-                    Console.WriteLine("No se encontro ningun registro con esos datos.");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\nNo se encontro ningun registro con esos datos.");
+                    Console.ResetColor();
                 }
             }
 
@@ -186,9 +194,10 @@ void fntCancelarReserva()
         catch (Exception ex)
         {
             transaction.Rollback();
-
-            Console.WriteLine("No se pudo realizar la operación.");
-            Console.WriteLine("Error: " + ex.ToString());
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nNo se pudo realizar la operación.");
+            Console.WriteLine("\nError: " + ex.ToString());
+            Console.ResetColor();
         }
 
 
@@ -199,9 +208,9 @@ void fntCancelarReserva()
 //Realizar una Reserva
 void fntRealizarReserva()
 {
-    Console.WriteLine("Realizar reserva");
+    Console.WriteLine("\nREALIZAR RESERVA");
 
-    Console.Write("A nombre de quien será la reserva: ");
+    Console.Write("\nA nombre de quien será la reserva: ");
     string reservaPara = Console.ReadLine()!;
 
     Console.WriteLine("\nCual mesa le interesaria reservar?");
@@ -227,11 +236,13 @@ void fntRealizarReserva()
                 int rowsAffected = command.ExecuteNonQuery();
                 if (rowsAffected > 0)
                 {
-                    Console.WriteLine("Reserva realizada con éxito.");
+                    Console.WriteLine("\nReserva realizada con éxito.");
                 }
                 else
                 {
-                    Console.WriteLine("La mesa no está disponible.");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\nLa mesa no está disponible.");
+                    Console.ResetColor();
                 }
             }
 
@@ -263,7 +274,7 @@ void fntRealizarReserva()
                     if (reader.Read())
                     {
                         int idReserva = reader.GetInt32(reader.GetOrdinal("id_reserva"));
-                        Console.WriteLine($"El Id de su reserva es {idReserva}");
+                        Console.WriteLine($"\nEl Id de su reserva es {idReserva}");
                     }
                 }
             }
@@ -273,8 +284,11 @@ void fntRealizarReserva()
         catch (Exception ex)
         {
             transaction.Rollback();
-            Console.WriteLine("No se pudo realizar la operacion.");
-            Console.WriteLine("Error: " + ex.ToString());
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nNo se pudo realizar la operacion.");
+
+            Console.WriteLine("\nError: " + ex.ToString());
+            Console.ResetColor();
         }
         connection.Close();
     }
@@ -284,36 +298,47 @@ void fntRealizarReserva()
 //Hacer consulta de una reserva
 void fntConsultarReserva()
 {
-
-    SqlConnection connection = new SqlConnection(connectionString);
-    connection.Open();
-
-
-    int reserva;
-    Console.WriteLine("\nConsultar reserva");
-    Console.Write("\nIngrese el ID asignado a su reserva: ");
-    reserva = Convert.ToInt32(Console.ReadLine());
-
-    string query = "select * from tabla_reservas where id_reserva = " + reserva;
-
-    SqlCommand command = new SqlCommand(query, connection);
-
-    command.ExecuteNonQuery();
-
-    SqlDataReader registro = command.ExecuteReader();
-    if (registro.Read())
+    try
     {
-        reserva = Convert.ToInt32(registro["id_reserva"]);
-        int Mesa = Convert.ToInt32(registro["numero_mesa"]);
-        string Nombre = registro["reserva_para"].ToString()!;
-        TimeSpan Hora = registro.GetTimeSpan(registro.GetOrdinal("hora_reserva"));
-        Console.WriteLine($"Id de la reserva: {reserva}\nTitular: {Nombre}\nHora: {Hora}\nNumero de mesa: {Mesa}");
-    }
-    else
-    {
-        Console.WriteLine("\nNo existe reserva con ese ID");
-    }
+        SqlConnection connection = new SqlConnection(connectionString);
+        connection.Open();
 
+
+        int reserva;
+        Console.WriteLine("\nCONSULTAR RESERVA");
+        Console.Write("\nIngrese el ID asignado a su reserva: ");
+        reserva = Convert.ToInt32(Console.ReadLine());
+
+        string query = "select * from tabla_reservas where id_reserva = " + reserva;
+
+        SqlCommand command = new SqlCommand(query, connection);
+
+        command.ExecuteNonQuery();
+
+        SqlDataReader registro = command.ExecuteReader();
+        if (registro.Read())
+        {
+            reserva = Convert.ToInt32(registro["id_reserva"]);
+            int Mesa = Convert.ToInt32(registro["numero_mesa"]);
+            string Nombre = registro["reserva_para"].ToString()!;
+            TimeSpan Hora = registro.GetTimeSpan(registro.GetOrdinal("hora_reserva"));
+            Console.WriteLine($"\n\tId de la reserva:[ {reserva} ]\t  Titular: [ {Nombre} ]\tHora: [ {Hora} ]\tNumero de mesa:[ {Mesa} ]");
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nNo existe reserva con ese ID");
+            Console.ResetColor();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("\nNo se pudo realizar la operacion.");
+
+        Console.WriteLine("\nError: " + ex.ToString());
+        Console.ResetColor();
+    }
 }
 
 
