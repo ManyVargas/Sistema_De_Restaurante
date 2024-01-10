@@ -92,7 +92,7 @@ void fntVerMesas()
                     if (reader.HasRows)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"|{prdFormatoColumna("Numero de Mesa", vColumnaAncho)}|{prdFormatoColumna("Personas", vColumnaAncho)}|{prdFormatoColumna("Hora Disponible", vColumnaAncho)}|{prdFormatoColumna("Estado", vColumnaAncho)}");
+                        Console.WriteLine($"|{prdFormatoColumna("Numero de Mesa", vColumnaAncho)}|{prdFormatoColumna("Personas", vColumnaAncho)}|{prdFormatoColumna("Hora Disponible", vColumnaAncho)}|{prdFormatoColumna("Estado", vColumnaAncho)}|{prdFormatoColumna("Reserva Actual", vColumnaAncho)}");
                         Console.ResetColor();
                         while (reader.Read())
                         {
@@ -101,11 +101,11 @@ void fntVerMesas()
                             TimeSpan horaDisponible = reader.GetTimeSpan(reader.GetOrdinal("Horas_disponibles"));
                             bool estadoMesa = reader.GetBoolean(reader.GetOrdinal("estado_mesa"));
                             string Disponible = estadoMesa ? "Disponible" : "Reservada";
+                            int reservaActual = reader.GetInt32(reader.GetOrdinal("id_reserva"));
 
 
-
-                            prdLineasHorizontales(20 * 4 + 2);
-                            Fila(numeroMesa, cantidadPersonas, horaDisponible, Disponible);
+                            prdLineasHorizontales(vColumnaAncho * 5 + 2);
+                            Fila(numeroMesa, cantidadPersonas, horaDisponible, Disponible,reservaActual);
                         }
                     }
                     else
@@ -135,13 +135,6 @@ void fntCancelarReserva()
     Console.Write("\nId de reserva: ");
     int idReserva = Convert.ToInt32(Console.ReadLine());
 
-    Console.Write("\nIngrese el numero de mesa de su reserva: ");
-    int numeroMesa = Convert.ToInt32(Console.ReadLine());
-
-    Console.Write("\nIngrese a que hora es su reserva en formato (HH:mm): ");
-    string horaReservaString = Console.ReadLine()!;
-    TimeSpan horaReserva = TimeSpan.Parse(horaReservaString);
-
 
     using (SqlConnection connection = new SqlConnection(connectionString))
     {
@@ -150,10 +143,9 @@ void fntCancelarReserva()
 
         try
         {
-            string query = "delete from tabla_reservas where hora_reserva = @hora_reserva and id_reserva = @id_reserva and reserva_para = @reserva_para";
+            string query = "delete from tabla_reservas where id_reserva = @id_reserva and reserva_para = @reserva_para";
             using (SqlCommand command = new SqlCommand(query, connection, transaction))
             {
-                command.Parameters.AddWithValue("@hora_reserva", horaReserva);
                 command.Parameters.AddWithValue("@id_reserva", idReserva);
                 command.Parameters.AddWithValue("@reserva_para", nombreDe);
                 int rowsAffected = command.ExecuteNonQuery();
@@ -170,26 +162,25 @@ void fntCancelarReserva()
                 }
             }
 
-            string query2 = "update tabla_mesas_disponibles set estado_mesa = 1 where horas_disponibles = @hora_reserva and numero_mesa = @numero_mesa and reserva_de = @reserva_para";
+            string query2 = "update tabla_mesas_disponibles set estado_mesa = 1 where id_reserva = @id_reserva";
             using (SqlCommand command2 = new SqlCommand(query2, connection, transaction))
             {
 
-
-                command2.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                command2.Parameters.AddWithValue("@hora_reserva", horaReserva);
-                command2.Parameters.AddWithValue("@reserva_para", nombreDe);
-                int rowsAffected = command2.ExecuteNonQuery();
+                command2.Parameters.AddWithValue("@id_reserva", idReserva);
+                command2.ExecuteNonQuery();
             }
 
-            string query3 = "update tabla_mesas_disponibles set reserva_de = default where numero_mesa = @numero_mesa";
+            string query3 = "update tabla_mesas_disponibles set id_reserva = default where id_reserva = @id_reserva";
             using (SqlCommand command3 = new SqlCommand(query3, connection, transaction))
             {
-                command3.Parameters.AddWithValue("@reserva_para", nombreDe);
-                command3.Parameters.AddWithValue("@numero_mesa", numeroMesa);
+
+                command3.Parameters.AddWithValue("@id_reserva", idReserva);
                 command3.ExecuteNonQuery();
             }
 
             transaction.Commit();
+          
+
         }
         catch (Exception ex)
         {
@@ -252,14 +243,13 @@ void fntRealizarReserva()
 
 
                 command2.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                int rowsAffected = command2.ExecuteNonQuery();
+                command2.ExecuteNonQuery();
             }
 
-            string query3 = "update tabla_mesas_disponibles set reserva_de = @reserva_para where numero_mesa = @numero_mesa";
-            using (SqlCommand command3 = new SqlCommand(query3, connection, transaction))
+            string query3 = "UPDATE tabla_mesas_disponibles SET id_reserva = tabla_reservas.id_reserva FROM tabla_mesas_disponibles INNER JOIN tabla_reservas ON tabla_mesas_disponibles.id_mesa = tabla_reservas.id_mesa WHERE tabla_reservas.numero_mesa = @numero_mesa;";
+            using(SqlCommand command3 = new SqlCommand(query3, connection, transaction))
             {
-                command3.Parameters.AddWithValue("@reserva_para", reservaPara);
-                command3.Parameters.AddWithValue("@numero_mesa", numeroMesa);
+                command3.Parameters.AddWithValue("@numero_mesa",numeroMesa);
                 command3.ExecuteNonQuery();
             }
 
@@ -361,9 +351,9 @@ void prdLineasHorizontales(int longitud)
 }
 
 //Imprimir cada fila de la tabla
-void Fila(int columna1, int columna2, TimeSpan columna3, string columna4)
+void Fila(int columna1, int columna2, TimeSpan columna3, string columna4, int columna5)
 {
-    Console.WriteLine($"|{prdFormatoColumna(columna1.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna2.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna3.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna4, vColumnaAncho)}");
+    Console.WriteLine($"|{prdFormatoColumna(columna1.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna2.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna3.ToString(), vColumnaAncho)}|{prdFormatoColumna(columna4, vColumnaAncho)}|{prdFormatoColumna(columna5.ToString(), vColumnaAncho)}");
 }
 
 void fntVolverMenuTexto()
