@@ -1,5 +1,6 @@
 ﻿//Debe tener las referencias de System.Data.SqlClient instalada
 using System.Data.SqlClient;
+using System.Runtime.Intrinsics.X86;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -7,7 +8,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 string connectionString = "Server=tcp:many2024.database.windows.net,1433;Initial Catalog=MesasDB;Persist Security Info=False;User ID=administrador;" +
     "Password=Alejandro.122403;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
 
-//Declaración de Variables
+//Declaración de Variables generales
 string userChoise;
 int vColumnaAncho = 20;
 
@@ -48,7 +49,8 @@ do
             fntCerrarPrograma();
             break;
         default:
-            Console.WriteLine("\nSelección inválida!.");
+            Console.WriteLine("\nSelección inválida!");
+            fntVolverMenuTexto();
             break;
     }
 
@@ -63,8 +65,8 @@ Console.ReadKey();
 //Mostrar opciones del menu
 void fntMostrarOpciones()
 {
-    
-    
+
+
     Console.WriteLine("\n[1] Ver disponibilidad de mesas.");
     Console.WriteLine("\n[2] Realizar una reserva.");
     Console.WriteLine("\n[3] Cancelar una reserva.");
@@ -105,14 +107,12 @@ void fntVerMesas()
 
 
                             prdLineasHorizontales(vColumnaAncho * 5 + 2);
-                            Fila(numeroMesa, cantidadPersonas, horaDisponible, Disponible,reservaActual);
+                            Fila(numeroMesa, cantidadPersonas, horaDisponible, Disponible, reservaActual);
                         }
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("No hay registros disponibles.");
-                        Console.ResetColor();
+                        fntErrores("No hay registros disponibles.");
                     }
                 }
             }
@@ -127,13 +127,35 @@ void fntVerMesas()
 void fntCancelarReserva()
 {
     Console.WriteLine("\nCANCELAR RESERVA");
-    Console.WriteLine("\nPara mas seguridad ingrese los siguientes datos:\n");
+    Console.WriteLine("\nPara mas seguridad ingrese los siguientes datos:");
+    string nombreDe;
+    do
+    {
+        Console.Write("\nA nombre de quien esta la reserva: ");
+        nombreDe = Console.ReadLine()!;
 
-    Console.Write("\nA nombre de quien esta la reserva: ");
-    string nombreDe = Console.ReadLine()!;
+        if (string.IsNullOrEmpty(nombreDe))
+        {
+            fntErrores("El nombre no puede estar vacio");
+        }
 
-    Console.Write("\nId de reserva: ");
-    int idReserva = Convert.ToInt32(Console.ReadLine());
+        if (fntContieneNumeros(nombreDe))
+        {
+            fntErrores("El nombre no puede contener números.");
+        }
+    } while (string.IsNullOrEmpty(nombreDe) || fntContieneNumeros(nombreDe));
+
+    int idReserva;
+    while (true)
+    {
+        Console.Write("\nId de reserva: ");
+
+        if (int.TryParse(Console.ReadLine(), out idReserva))
+        {
+            break;
+        }
+        fntErrores("El id de reserva debe ser un número válido.");
+    }
 
 
     using (SqlConnection connection = new SqlConnection(connectionString))
@@ -156,9 +178,7 @@ void fntCancelarReserva()
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("\nNo se encontro ningun registro con esos datos.");
-                    Console.ResetColor();
+                    fntErrores("No se encontro ningun registro con esos datos.");
                 }
             }
 
@@ -179,16 +199,16 @@ void fntCancelarReserva()
             }
 
             transaction.Commit();
-          
-
+        }
+        catch (SqlException ex)
+        {
+            transaction.Rollback();
+            fntErrores("Error en la base de datos: " + ex.ToString());
         }
         catch (Exception ex)
         {
             transaction.Rollback();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nNo se pudo realizar la operación.");
-            Console.WriteLine("\nError: " + ex.ToString());
-            Console.ResetColor();
+            fntErrores("Error inesperado: " + ex.ToString());
         }
 
 
@@ -199,16 +219,36 @@ void fntCancelarReserva()
 //Realizar una Reserva
 void fntRealizarReserva()
 {
-    Console.WriteLine("\nREALIZAR RESERVA");
+    string reservaPara;
 
-    Console.Write("\nA nombre de quien será la reserva: ");
-    string reservaPara = Console.ReadLine()!;
+    Console.WriteLine("\nREALIZAR RESERVA");
+    do
+    {
+        Console.Write("\nA nombre de quien será la reserva: ");
+        reservaPara = Console.ReadLine()!;
+        if (string.IsNullOrEmpty(reservaPara))
+        {
+            fntErrores("El nombre no puede estar vacio");
+        }
+        if (fntContieneNumeros(reservaPara))
+        {
+            fntErrores("El nombre no puede contener números.");
+        }
+    } while (string.IsNullOrEmpty(reservaPara) || fntContieneNumeros(reservaPara));
 
     Console.WriteLine("\nCual mesa le interesaria reservar?");
     fntVerMesas();
+    int numeroMesa;
+    while (true)
+    {
+        Console.Write("\nIngrese el numero de mesa: ");
 
-    Console.Write("\nIngrese el numero de mesa: ");
-    int numeroMesa = Convert.ToInt32(Console.ReadLine());
+        if (int.TryParse(Console.ReadLine(), out numeroMesa) && numeroMesa <= 10)
+        {
+            break;
+        }
+        fntErrores("Debe ingresar un número de mesa válido.");
+    }
 
     using (SqlConnection connection = new SqlConnection(connectionString))
     {
@@ -231,9 +271,7 @@ void fntRealizarReserva()
                 }
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("\nLa mesa no está disponible.");
-                    Console.ResetColor();
+                    fntErrores("La mesa no está disponible.");
                 }
             }
 
@@ -247,9 +285,9 @@ void fntRealizarReserva()
             }
 
             string query3 = "UPDATE tabla_mesas_disponibles SET id_reserva = tabla_reservas.id_reserva FROM tabla_mesas_disponibles INNER JOIN tabla_reservas ON tabla_mesas_disponibles.id_mesa = tabla_reservas.id_mesa WHERE tabla_reservas.numero_mesa = @numero_mesa;";
-            using(SqlCommand command3 = new SqlCommand(query3, connection, transaction))
+            using (SqlCommand command3 = new SqlCommand(query3, connection, transaction))
             {
-                command3.Parameters.AddWithValue("@numero_mesa",numeroMesa);
+                command3.Parameters.AddWithValue("@numero_mesa", numeroMesa);
                 command3.ExecuteNonQuery();
             }
 
@@ -271,14 +309,15 @@ void fntRealizarReserva()
 
             transaction.Commit();
         }
+        catch (SqlException ex)
+        {
+            transaction.Rollback();
+            fntErrores("Error en la base de datos: " + ex.ToString());
+        }
         catch (Exception ex)
         {
             transaction.Rollback();
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nNo se pudo realizar la operacion.");
-
-            Console.WriteLine("\nError: " + ex.ToString());
-            Console.ResetColor();
+            fntErrores("Error: " + ex.ToString());
         }
         connection.Close();
     }
@@ -294,10 +333,17 @@ void fntConsultarReserva()
         connection.Open();
 
 
-        int reserva;
         Console.WriteLine("\nCONSULTAR RESERVA");
-        Console.Write("\nIngrese el ID asignado a su reserva: ");
-        reserva = Convert.ToInt32(Console.ReadLine());
+        int reserva;
+        while (true)
+        {
+            Console.Write("\nIngrese el ID asignado a su reserva: ");
+            if (int.TryParse(Console.ReadLine(), out reserva))
+            {
+                break;
+            }
+            fntErrores("Debe ingresar un número válido.");
+        }
 
         string query = "select * from tabla_reservas where id_reserva = " + reserva;
 
@@ -316,18 +362,16 @@ void fntConsultarReserva()
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nNo existe reserva con ese ID");
-            Console.ResetColor();
+            fntErrores("No existe reserva con ese ID");
         }
+    }
+    catch (SqlException ex)
+    {
+        fntErrores("\nError en la base de datos: " + ex.ToString());
     }
     catch (Exception ex)
     {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("\nNo se pudo realizar la operacion.");
-
-        Console.WriteLine("\nError: " + ex.ToString());
-        Console.ResetColor();
+        fntErrores("\nError: " + ex.ToString());
     }
 }
 
@@ -363,4 +407,23 @@ void fntVolverMenuTexto()
     Console.ResetColor();
     Console.ReadKey();
     Console.Clear();
+}
+
+void fntErrores(string texto)
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine("\n" + texto);
+    Console.ResetColor();
+}
+
+static bool fntContieneNumeros(string input)
+{
+    foreach (char caracter in input)
+    {
+        if (char.IsDigit(caracter))
+        {
+            return true;
+        }
+    }
+    return false;
 }
