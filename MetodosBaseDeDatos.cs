@@ -1,4 +1,5 @@
 ﻿//Añadiendo referencias necesarias
+using System.Data;
 using System.Data.SqlClient;
 using Sistema_de_Restaurante.MetodosGenericos;
 
@@ -190,18 +191,38 @@ namespace Sistema_de_Restaurante.MetodosBaseDatos
                 SqlTransaction transaction = connection.BeginTransaction();
                 try
                 {
-                    string query = "if exists (select numero_mesa from tabla_mesas_disponibles where numero_mesa = @numero_mesa and estado_mesa = 1) begin insert into tabla_reservas " +
-                        "(id_mesa, numero_mesa, reserva_para,hora_reserva) values((select id_mesa from tabla_mesas_disponibles where numero_mesa = @numero_mesa)" +
-                        ",@numero_mesa,@reserva_para,(select horas_disponibles from tabla_mesas_disponibles where numero_mesa = @numero_mesa)) end ";
+                    //Nombre del procedimiento almacenado
+                    string storedProcedureName = "insertarReserva";
 
-                    using (SqlCommand command = new SqlCommand(query, connection, transaction))
+                    using (SqlCommand command = new SqlCommand(storedProcedureName, connection, transaction))
                     {
+                        //Indicar que el comando es un procedimiento almacenado
+                        command.CommandType = CommandType.StoredProcedure;
+
                         command.Parameters.AddWithValue("@reserva_para", reservaPara);
                         command.Parameters.AddWithValue("@numero_mesa", numeroMesa);
+
+
                         int rowsAffected = command.ExecuteNonQuery();
+
                         if (rowsAffected > 0)
                         {
                             Console.WriteLine("\nReserva realizada con éxito.");
+                            string query4 = "select id_reserva from tabla_reservas where numero_mesa = @numero_mesa and reserva_para = @reserva_para";
+                            using (SqlCommand command4 = new SqlCommand(query4, connection, transaction))
+                            {
+                                command4.Parameters.AddWithValue("@numero_mesa", numeroMesa);
+                                command4.Parameters.AddWithValue("@reserva_para", reservaPara);
+                                command4.ExecuteNonQuery();
+                                using (SqlDataReader reader = command4.ExecuteReader())
+                                {
+                                    if (reader.Read())
+                                    {
+                                        int idReserva = reader.GetInt32(reader.GetOrdinal("id_reserva"));
+                                        Console.WriteLine($"\nEl Id de su reserva es {idReserva}");
+                                    }
+                                }
+                            }
                         }
                         else
                         {
@@ -225,21 +246,7 @@ namespace Sistema_de_Restaurante.MetodosBaseDatos
                         command3.ExecuteNonQuery();
                     }
 
-                    string query4 = "select id_reserva from tabla_reservas where numero_mesa = @numero_mesa and reserva_para = @reserva_para";
-                    using (SqlCommand command4 = new SqlCommand(query4, connection, transaction))
-                    {
-                        command4.Parameters.AddWithValue("@numero_mesa", numeroMesa);
-                        command4.Parameters.AddWithValue("@reserva_para", reservaPara);
-                        command4.ExecuteNonQuery();
-                        using (SqlDataReader reader = command4.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                int idReserva = reader.GetInt32(reader.GetOrdinal("id_reserva"));
-                                Console.WriteLine($"\nEl Id de su reserva es {idReserva}");
-                            }
-                        }
-                    }
+                    
 
                     transaction.Commit();
                 }

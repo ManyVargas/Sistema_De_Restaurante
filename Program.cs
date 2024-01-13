@@ -42,6 +42,7 @@ do
             Metodos.fntCerrarPrograma();
             break;
         default:
+            Console.Clear() ;
             Metodos.fntErrores("\nSelección inválida!");
             Metodos.fntVolverMenuTexto();
             break;
